@@ -1,14 +1,14 @@
-# 🍜 FoodFlow — Online Food Ordering (Swiggy-style)
+# 🍜 Foodiebay — Online Food Ordering (Swiggy-style)
 
 A full-stack food delivery web app + Android APK inspired by **Swiggy**: browse restaurants,
-build a cart, checkout with **Razorpay** payments, and track your order live.
+build a cart, pay via **UPI (direct to merchant) or Razorpay**, and track your order live.
 
 | Layer | Tech | Deploy target |
 |---|---|---|
-| **Backend API** | Django 6.1 · DRF · SimpleJWT · SQLite (dev) / PostgreSQL (prod) | **Render** |
+| **Backend API** | Django 6.1 · DRF · SimpleJWT · **Supabase PostgreSQL** | **Render** |
 | **Frontend web** | React 19 · Vite 7 · TypeScript | **Firebase Hosting** |
 | **Android app** | Same React app wrapped via **Capacitor 7** | Local APK build |
-| **Payments** | Razorpay Checkout + server-side signature verification + webhooks | — |
+| **Payments** | **Direct UPI (QR + intent link)** · Razorpay (optional) | — |
 
 ---
 
@@ -17,11 +17,13 @@ build a cart, checkout with **Razorpay** payments, and track your order live.
 - 🏪 **Restaurant discovery** — search, Pure-Veg / Open-now filters, sort by rating or delivery time
 - 📖 **Menus** with categories, veg/non-veg markers, bestsellers, availability
 - 🛒 **Cart** — persists in localStorage, auto-switches when you change restaurants
-- 💸 **Razorpay payments** — UPI/cards/netbanking; HMAC signature verification on the server + webhook
-  (`payment.captured`) support. Works in **demo mode** with no keys (payments simulated)
-- 🧾 **Server-side billing** — item prices/taxes/fees always recomputed on the backend; the client
-  cart is never trusted
-- 🔐 **Email auth** — JWT access + refresh with auto-refresh and blacklist-on-logout
+- 💸 **UPI payments** — after checkout a QR + "Open UPI App" button pays directly to the
+  merchant VPA (`7780383832@upi`). Works in every UPI app (GPay · PhonePe · Paytm)
+- 🧾 **Razorpay (optional)** — when `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` are set, the
+  professional Razorpay Checkout opens instead (cards/netbanking/UPI), with server-side
+  HMAC signature verification + webhook (`payment.captured`)
+- 🛡️ **Server-side billing** — item prices/taxes/fees always recomputed on the backend
+- 🔐 **Email auth** — JWT access + refresh, auto-refresh, case-insensitive login
 - 🛵 **Live order tracking** — placed → preparing → out-for-delivery → delivered with polling
 - 📱 **Android APK** — the same web app, packaged with Capacitor
 - 🌱 **Seed data** — 10 Swiggy-style restaurants with full menus (`python manage.py seed_data`)
@@ -29,8 +31,15 @@ build a cart, checkout with **Razorpay** payments, and track your order live.
 ### Demo accounts
 | Role | Email | Password |
 |---|---|---|
-| Admin (Django admin) | `admin@foodflow.app` | `admin123` |
-| Customer | `demo@foodflow.app` | `demo1234` |
+| Admin (Django admin) | `admin@foodiebay.app` | `admin123` |
+| Customer | `demo@foodiebay.app` | `demo1234` |
+
+### Database
+The app uses **Supabase PostgreSQL** (set in `backend/.env`):
+```
+DATABASE_URL=postgresql://postgres:Supabase%40123@db.ndimnbxuteqcuzsyocht.supabase.co:5432/postgres?sslmode=require
+```
+> Note: the `@` inside the password must be URL-encoded as `%40` in the connection string.
 
 ---
 
@@ -42,6 +51,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate            # Windows (use source .venv/bin/activate on macOS/Linux)
 pip install -r requirements.txt
+copy .env.example .env             # edit if your DB/keys differ
 python manage.py migrate
 python manage.py seed_data
 python manage.py runserver
@@ -54,23 +64,26 @@ npm install
 npm run dev
 ```
 
-**Payments in demo mode:** with no `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` set, checkout
-simulates payment success so the whole flow is testable. To take **real** payments, set the
-keys (test keys work for testing with Razorpay test cards/UPI).
+**Payments:** with no Razorpay keys configured, checkout shows a **UPI QR + intent link**
+paying straight to `7780383832@upi` — fully testable without any gateway account.
+Add Razorpay keys (from [dashboard](https://dashboard.razorpay.com/app/keys)) to switch to
+Razorpay Checkout.
 
 ---
 
 ## ☁️ Deploy to Render (backend)
 
-1. Push this repo to GitHub (see below).
+1. Push this repo to GitHub.
 2. [Render dashboard](https://dashboard.render.com) → **New → Blueprint** → pick the repo.
-   `render.yaml` at the repo root defines everything: a free PostgreSQL DB (`foodflow-db`) and
-   the Django web service (`foodflow-api`). The build runs `collectstatic`, migrations and seed.
+   `render.yaml` defines the `foodiebay-api` web service.
 3. Fill in the prompted env vars:
+   - `DATABASE_URL` → your Supabase URL (password `@` encoded as `%40`, see above)
    - `CORS_ALLOWED_ORIGINS` → your Firebase URL, e.g. `https://<project>.web.app`
-   - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` → from [Razorpay dashboard](https://dashboard.razorpay.com/app/keys)
-   - `RAZORPAY_WEBHOOK_SECRET` → Settings → Webhooks (point it at `https://<your-render-app>.onrender.com/api/v1/payments/webhook/`, event: `payment.captured`)
-4. Your API will be live at `https://foodflow-api.onrender.com` (health: `/api/v1/health/`).
+   - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` → optional, for Razorpay Checkout
+   - `RAZORPAY_WEBHOOK_SECRET` → Settings → Webhooks, point at
+     `https://<your-render-app>.onrender.com/api/v1/payments/webhook/` (event: `payment.captured`)
+   - `UPI_VPA` / `UPI_PAYEE_NAME` → default to `7780383832@upi` / `Foodiebay`
+4. Your API will be live at `https://foodiebay-api.onrender.com` (health: `/api/v1/health/`).
 
 ---
 
@@ -80,7 +93,7 @@ keys (test keys work for testing with Razorpay test cards/UPI).
 2. `firebase use --add` inside `frontend/` → select your project, alias `default`
 3. Create `frontend/.env.production`:
    ```
-   VITE_API_BASE_URL=https://foodflow-api.onrender.com
+   VITE_API_BASE_URL=https://foodiebay-api.onrender.com
    ```
 4. Build + deploy:
    ```bash
@@ -88,8 +101,7 @@ keys (test keys work for testing with Razorpay test cards/UPI).
    npm run build
    firebase deploy
    ```
-5. Add your Firebase URL (e.g. `https://<project>.web.app`) to the backend's
-   `CORS_ALLOWED_ORIGINS` on Render.
+5. Add your Firebase URL to the backend's `CORS_ALLOWED_ORIGINS` on Render.
 
 ---
 
@@ -99,7 +111,7 @@ The same React app is packaged natively with Capacitor (project in `frontend/and
 
 1. Point the app at your live API — `frontend/.env.production`:
    ```
-   VITE_API_BASE_URL=https://foodflow-api.onrender.com
+   VITE_API_BASE_URL=https://foodiebay-api.onrender.com
    ```
 2. Rebuild the web bundle and sync it into the Android project:
    ```bash
@@ -108,7 +120,7 @@ The same React app is packaged natively with Capacitor (project in `frontend/and
    ```
 3. Build the APK:
    - **Android Studio:** `npm run android:open` → *Build → Build App Bundle(s)/APK(s) → Build APK(s)*
-   - **CLI** (with JDK 17–21 + Android SDK installed):
+   - **CLI** (JDK 17–21 + Android SDK 35+):
      ```bash
      cd android
      gradlew assembleDebug                 # debug APK
@@ -116,28 +128,27 @@ The same React app is packaged natively with Capacitor (project in `frontend/and
      ```
    The debug APK lands in `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-4. **Release signing** — create a keystore once, then reference it in
-   `android/app/build.gradle` (`signingConfigs.release`) to build installable release APKs:
+4. **Release signing** — create a keystore once and reference it in
+   `android/app/build.gradle` (`signingConfigs.release`):
    ```
-   keytool -genkey -v -keystore foodflow.keystore -alias foodflow -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkey -v -keystore foodiebay.keystore -alias foodiebay -keyalg RSA -keysize 2048 -validity 10000
    ```
 
-> Requirements: JDK 17–21 (Android Studio's bundled JBR works), Android SDK 35+.
-> `android/local.properties` should contain `sdk.dir=C:\\path\\to\\Android\\Sdk` (it is
-> git-ignored; Android Studio creates it automatically).
+> UPI intent links (`upi://pay?...`) open installed UPI apps directly from the APK —
+> the ideal payment UX on Android in India.
 
 ---
 
 ## 🗂 Repo layout
 
 ```
-├── render.yaml                  # Render blueprint (API + Postgres)
+├── render.yaml                  # Render blueprint (API service, uses Supabase DB)
 ├── backend/
-│   ├── config/                  # Django settings/urls/wsgi
+│   ├── config/                  # Django settings/urls/wsgi (+ .env loader)
 │   ├── core/                    # health + API index
 │   ├── accounts/                # email auth (register/login/JWT/me)
 │   ├── restaurants/             # restaurants, menus, seed_data command
-│   └── orders/                  # orders, Razorpay integration, webhook
+│   └── orders/                  # orders, Razorpay + UPI, webhook
 └── frontend/
     ├── src/                     # React app (pages, contexts, components)
     ├── android/                 # Capacitor Android project (APK)
@@ -155,8 +166,8 @@ The same React app is packaged natively with Capacitor (project in `frontend/and
 | `/auth/register/` | POST | Create account |
 | `/auth/token/` | POST | Login (JWT) |
 | `/auth/me/` | GET | Current user |
-| `/orders/checkout/` | POST | Create order + Razorpay order |
-| `/orders/verify-payment/` | POST | Verify Razorpay signature |
+| `/orders/checkout/` | POST | Create order + UPI intent + Razorpay order |
+| `/orders/verify-payment/` | POST | Confirm payment (Razorpay signature or UPI) |
 | `/orders/` | GET | My orders |
 | `/orders/{id}/` | GET | Order detail |
 | `/orders/{id}/advance/` | POST | Demo: progress status |

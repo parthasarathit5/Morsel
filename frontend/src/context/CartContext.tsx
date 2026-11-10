@@ -10,7 +10,7 @@ type CartState = {
 }
 
 const EMPTY: CartState = { restaurantId: null, restaurantName: '', lines: [] }
-const STORAGE_KEY = 'foodflow.cart'
+const STORAGE_KEY = 'Foodiebay.cart'
 
 type CartContextValue = {
   state: CartState

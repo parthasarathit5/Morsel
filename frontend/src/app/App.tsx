@@ -30,7 +30,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <footer className="footer">
-            <span>🍜 FoodFlow — Swiggy-style food ordering demo</span>
+            <span>🍜 Foodiebay — Swiggy-style food ordering demo</span>
             <span>Django REST · Razorpay · React</span>
           </footer>
         </Router>

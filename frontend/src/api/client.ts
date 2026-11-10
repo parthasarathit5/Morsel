@@ -1,14 +1,14 @@
 import type { CheckoutResponse, Order, Restaurant, RestaurantDetail, User } from '../types'
 
 /**
- * Base URL of the FoodFlow API.
+ * Base URL of the Foodiebay API.
  * - Local dev: '' (empty) — Vite proxies /api to 127.0.0.1:8000
  * - Firebase / APK: set VITE_API_BASE_URL=https://<your-render-app>.onrender.com
  */
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
-const TOKEN_KEY = 'foodflow.access'
-const REFRESH_KEY = 'foodflow.refresh'
+const TOKEN_KEY = 'Foodiebay.access'
+const REFRESH_KEY = 'Foodiebay.refresh'
 
 export const tokens = {
   get access() {

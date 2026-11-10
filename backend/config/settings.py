@@ -1,5 +1,5 @@
 """
-Django settings for the FoodFlow backend (Swiggy-style food ordering).
+Django settings for the Foodiebay backend (Swiggy-style food ordering).
 
 Local dev  : SQLite + DEBUG=1 + demo payments (no Razorpay keys needed).
 On Render  : DATABASE_URL (Postgres) + DEBUG=0 + Razorpay keys from env.
@@ -9,7 +9,13 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Local .env (Supabase URL, Razorpay keys, …). On Render these come from
+# the dashboard env vars instead.
+load_dotenv(BASE_DIR / '.env')
 
 IS_RENDER = 'RENDER' in os.environ
 
@@ -111,6 +117,9 @@ else:
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Case-insensitive email login
+AUTHENTICATION_BACKENDS = ['accounts.backends.CaseInsensitiveEmailBackend']
+
 # Password validation
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -145,6 +154,11 @@ SIMPLE_JWT = {
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
+
+# Direct UPI collection (works without Razorpay keys). Customers scan the
+# QR / tap "Open UPI App" and pay straight to this VPA.
+UPI_VPA = os.environ.get('UPI_VPA', '7780383832@upi')
+UPI_PAYEE_NAME = os.environ.get('UPI_PAYEE_NAME', 'Foodiebay')
 
 # Internationalization
 

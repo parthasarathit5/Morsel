@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Restaurant(models.Model):
-    """A restaurant / cloud kitchen listed on FoodFlow."""
+    """A restaurant / cloud kitchen listed on Foodiebay."""
 
     name = models.CharField(max_length=200)
     cuisine = models.CharField(max_length=120, help_text='e.g. "North Indian, Biryani"')

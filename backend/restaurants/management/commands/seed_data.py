@@ -1,9 +1,9 @@
-"""Seed FoodFlow with Swiggy-style restaurants and menus.
+"""Seed Foodiebay with Swiggy-style restaurants and menus.
 
 Usage: python manage.py seed_data [--flush]
 Idempotent: skips restaurants that already exist unless --flush is given.
-Also creates a demo admin (admin@foodflow.app / admin123) and demo user
-(demo@foodflow.app / demo1234) when missing.
+Also creates a demo admin (admin@foodiebay.app / admin123) and demo user
+(demo@foodiebay.app / demo1234) when missing.
 """
 
 from django.contrib.auth import get_user_model
@@ -267,7 +267,7 @@ RESTAURANTS = [
 
 
 class Command(BaseCommand):
-    help = 'Seed FoodFlow with Swiggy-style restaurants, menus and demo users.'
+    help = 'Seed Foodiebay with Swiggy-style restaurants, menus and demo users.'
 
     def add_arguments(self, parser):
         parser.add_argument('--flush', action='store_true', help='Delete existing data first.')
@@ -306,15 +306,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'  created: {restaurant.name} ({sum(len(v) for v in menu.values())} items)'))
 
         # Demo users ---------------------------------------------------------
-        if not User.objects.filter(email='admin@foodflow.app').exists():
+        if not User.objects.filter(email='admin@foodiebay.app').exists():
             User.objects.create_superuser(
-                email='admin@foodflow.app', password='admin123', first_name='FoodFlow Admin'
+                email='admin@foodiebay.app', password='admin123', first_name='Foodiebay Admin'
             )
-            self.stdout.write(self.style.SUCCESS('  created admin: admin@foodflow.app / admin123'))
-        if not User.objects.filter(email='demo@foodflow.app').exists():
+            self.stdout.write(self.style.SUCCESS('  created admin: admin@foodiebay.app / admin123'))
+        if not User.objects.filter(email='demo@foodiebay.app').exists():
             User.objects.create_user(
-                email='demo@foodflow.app', password='demo1234', first_name='Demo Foodie', phone='9876543210'
+                email='demo@foodiebay.app', password='demo1234', first_name='Demo Foodie', phone='9876543210'
             )
-            self.stdout.write(self.style.SUCCESS('  created demo user: demo@foodflow.app / demo1234'))
+            self.stdout.write(self.style.SUCCESS('  created demo user: demo@foodiebay.app / demo1234'))
 
         self.stdout.write(self.style.SUCCESS(f'Seed complete: {created_count} new restaurants.'))

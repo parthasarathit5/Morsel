@@ -1,4 +1,4 @@
-"""API tests for the FoodFlow order + payment flow."""
+"""API tests for the Foodiebay order + payment flow."""
 
 import pytest
 from django.contrib.auth import get_user_model

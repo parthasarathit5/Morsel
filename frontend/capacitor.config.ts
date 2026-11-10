@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 /**
- * FoodFlow Android app configuration.
+ * Foodiebay Android app configuration.
  *
  * The web build (frontend/dist) is bundled into a native Android WebView app.
  * Build steps:
@@ -14,8 +14,8 @@ import type { CapacitorConfig } from '@capacitor/cli'
  * instead of the dev proxy.
  */
 const config: CapacitorConfig = {
-  appId: 'app.foodflow.mobile',
-  appName: 'FoodFlow',
+  appId: 'app.Foodiebay.mobile',
+  appName: 'Foodiebay',
   webDir: 'dist',
   server: {
     // Allow the WebView to call the hosted API over HTTPS.

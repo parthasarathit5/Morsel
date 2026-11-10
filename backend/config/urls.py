@@ -1,4 +1,4 @@
-"""URL configuration for the FoodFlow backend."""
+"""URL configuration for the Foodiebay backend."""
 
 from django.contrib import admin
 from django.urls import include, path

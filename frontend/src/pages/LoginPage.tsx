@@ -67,11 +67,11 @@ export function LoginPage() {
         </form>
 
         <p className="auth-card__switch">
-          New to FoodFlow? <Link to="/register">Create an account</Link>
+          New to Foodiebay? <Link to="/register">Create an account</Link>
         </p>
 
         <div className="auth-card__demo">
-          <p>Demo account: <code>demo@foodflow.app</code> / <code>demo1234</code></p>
+          <p>Demo account: <code>demo@Foodiebay.app</code> / <code>demo1234</code></p>
         </div>
       </div>
     </div>

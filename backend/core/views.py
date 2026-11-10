@@ -4,7 +4,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-SERVICE_NAME = 'foodflow-backend'
+SERVICE_NAME = 'Foodiebay-backend'
 
 
 @api_view(['GET'])
@@ -18,7 +18,7 @@ def api_index(request):
     """JSON index of the available API endpoints."""
     return Response(
         {
-            'name': 'FoodFlow API',
+            'name': 'Foodiebay API',
             'version': 'v1',
             'service': SERVICE_NAME,
             'docs': {

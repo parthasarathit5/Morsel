@@ -32,7 +32,7 @@ export function RegisterPage() {
     <div className="page page--narrow">
       <div className="auth-card">
         <h1 className="auth-card__title">Create your account 🍽️</h1>
-        <p className="auth-card__subtitle">Join FoodFlow in seconds</p>
+        <p className="auth-card__subtitle">Join Foodiebay in seconds</p>
 
         <form onSubmit={onSubmit} className="form">
           <label className="form__label">

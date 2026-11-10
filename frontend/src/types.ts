@@ -45,6 +45,7 @@ export type CheckoutResponse = {
   currency: string
   demo_mode: boolean
   razorpay: { key_id: string; order_id: string }
+  upi: { vpa: string; payee_name: string; amount: number; intent_url: string }
   bill: { items_total: number; delivery_fee: number; taxes: number; grand_total: number }
 }
 

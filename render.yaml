@@ -1,22 +1,13 @@
-# FoodFlow — Render deployment blueprint
+# Foodiebay — Render deployment blueprint
 # Deploy: push to GitHub → Render dashboard → New > Blueprint → select this repo.
 #
-# Services created:
-#   1. foodflow-api  — Django backend (Web Service)
-#   2. foodflow-db    — PostgreSQL (free plan)
-#
-# The frontend deploys separately on Firebase Hosting (see frontend/README
-# section in the root README.md).
-
-databases:
-  - name: foodflow-db
-    databaseName: foodflow
-    user: foodflow
-    plan: free
+# This blueprint creates ONE web service (foodiebay-api). The database is
+# your existing Supabase PostgreSQL — paste its URL (with the @ in the
+# password URL-encoded as %40) into the DATABASE_URL prompt during setup.
 
 services:
   - type: web
-    name: foodflow-api
+    name: foodiebay-api
     runtime: python
     plan: free
     rootDir: backend
@@ -30,12 +21,12 @@ services:
         generateValue: true
       - key: DJANGO_DEBUG
         value: '0'
+      # Your Supabase Postgres (password @ encoded as %40):
+      # postgresql://postgres:Supabase%40123@db.ndimnbxuteqcuzsyocht.supabase.co:5432/postgres?sslmode=require
       - key: DATABASE_URL
-        fromDatabase:
-          name: foodflow-db
-          property: connectionString
+        sync: false
+      # Comma separated: https://<your-firebase>.web.app etc.
       - key: CORS_ALLOWED_ORIGINS
-        # Set after you know your Firebase URL, e.g. https://foodflow.web.app
         sync: false
       - key: RAZORPAY_KEY_ID
         sync: false
@@ -43,3 +34,8 @@ services:
         sync: false
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
+      # Direct UPI collection (falls back to 7780383832@upi if unset)
+      - key: UPI_VPA
+        value: 7780383832@upi
+      - key: UPI_PAYEE_NAME
+        value: Foodiebay

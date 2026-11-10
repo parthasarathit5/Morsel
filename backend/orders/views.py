@@ -1,5 +1,7 @@
 from decimal import Decimal, InvalidOperation
+from urllib.parse import quote
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import generics, status
@@ -98,6 +100,18 @@ class CheckoutView(APIView):
         amount_paise = int(order.grand_total * 100)
         payment = Payment.objects.create(order=order, amount=amount_paise)
 
+        # Direct UPI intent link + QR payload — customers can pay to the
+        # merchant VPA without Razorpay. The '@' stays literal: UPI apps
+        # expect `pa=xyz@upi`, not percent-encoded.
+        upi_intent_url = (
+            f'upi://pay?pa={quote(settings.UPI_VPA, safe="@")}'
+            f'&pn={quote(settings.UPI_PAYEE_NAME)}'
+            f'&am={order.grand_total:.2f}'
+            '&cu=INR'
+            f'&tn={quote(f"Foodiebay Order #{order.pk}")}'
+            f'&tr=foodiebay{order.pk}'
+        )
+
         use_razorpay = razorpay_enabled()
         if use_razorpay:
             try:
@@ -122,6 +136,12 @@ class CheckoutView(APIView):
                 'razorpay': {
                     'key_id': razorpay.settings.RAZORPAY_KEY_ID if use_razorpay else '',
                     'order_id': payment.razorpay_order_id,
+                },
+                'upi': {
+                    'vpa': settings.UPI_VPA,
+                    'payee_name': settings.UPI_PAYEE_NAME,
+                    'amount': float(order.grand_total),
+                    'intent_url': upi_intent_url,
                 },
                 'bill': {key: float(value) for key, value in bill.items()},
             },

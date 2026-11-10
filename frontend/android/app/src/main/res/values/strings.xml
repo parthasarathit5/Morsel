@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FoodFlow</string>
-    <string name="title_activity_main">FoodFlow</string>
-    <string name="package_name">app.foodflow.mobile</string>
-    <string name="custom_url_scheme">app.foodflow.mobile</string>
+    <string name="app_name">Foodiebay</string>
+    <string name="title_activity_main">Foodiebay</string>
+    <string name="package_name">app.Foodiebay.mobile</string>
+    <string name="custom_url_scheme">app.Foodiebay.mobile</string>
 </resources>

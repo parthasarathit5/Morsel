@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import QRCode from 'qrcode'
 
 import { api } from '../api/client'
 import { VegDot } from '../components/Badges'
@@ -21,6 +22,15 @@ function loadRazorpay(): Promise<typeof window.Razorpay | null> {
   })
 }
 
+type UpiPayment = {
+  orderId: number
+  amount: number
+  vpa: string
+  payeeName: string
+  intentUrl: string
+  qrDataUrl: string
+}
+
 export function CheckoutPage() {
   const navigate = useNavigate()
   const { state: auth } = useAuth()
@@ -31,7 +41,8 @@ export function CheckoutPage() {
   const [address, setAddress] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [stage, setStage] = useState<'form' | 'paying' | 'done'>('form')
+  const [stage, setStage] = useState<'form' | 'paying' | 'upi'>('form')
+  const [upi, setUpi] = useState<UpiPayment | null>(null)
 
   if (auth.status !== 'authenticated') {
     return (
@@ -77,14 +88,24 @@ export function CheckoutPage() {
         delivery: { name: name.trim(), phone: phone.trim(), address: address.trim() },
       })
 
-      // 2) Pay — via Razorpay Checkout when keys are configured,
-      //    otherwise a simulated confirmation (demo mode).
       if (checkout.demo_mode) {
-        await new Promise((resolve) => setTimeout(resolve, 1200)) // simulate gateway latency
-        const order = await api.verifyPayment({ order_id: checkout.order_id })
-        clear()
-        navigate(`/order/${order.id}/success`, { replace: true })
+        // 2a) No Razorpay keys configured → pay directly to the merchant UPI.
+        const qrDataUrl = await QRCode.toDataURL(checkout.upi.intent_url, {
+          width: 240,
+          margin: 1,
+          color: { dark: '#1c1c1c', light: '#ffffff' },
+        })
+        setUpi({
+          orderId: checkout.order_id,
+          amount: checkout.amount,
+          vpa: checkout.upi.vpa,
+          payeeName: checkout.upi.payee_name,
+          intentUrl: checkout.upi.intent_url,
+          qrDataUrl,
+        })
+        setStage('upi')
       } else {
+        // 2b) Razorpay Checkout with keys configured.
         const Razorpay = await loadRazorpay()
         if (!Razorpay) throw new Error('Could not load the Razorpay checkout script.')
 
@@ -93,7 +114,7 @@ export function CheckoutPage() {
           order_id: checkout.razorpay.order_id,
           amount: checkout.amount_paise,
           currency: checkout.currency,
-          name: 'FoodFlow',
+          name: 'Foodiebay',
           description: `Order from ${cart.restaurantName}`,
           prefill: { name: name.trim(), contact: phone.trim(), email: auth.user.email },
           theme: { color: '#f97316' },
@@ -124,10 +145,26 @@ export function CheckoutPage() {
           },
         })
         rzp.open()
+        setStage('form')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed')
       setStage('form')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const confirmUpiPayment = async () => {
+    if (!upi) return
+    setBusy(true)
+    setError('')
+    try {
+      const order = await api.verifyPayment({ order_id: upi.orderId })
+      clear()
+      navigate(`/order/${order.id}/success`, { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment confirmation failed')
     } finally {
       setBusy(false)
     }
@@ -188,7 +225,9 @@ export function CheckoutPage() {
             >
               {stage === 'paying' ? 'Processing…' : 'Proceed to payment'}
             </button>
-            <p className="checkout__gateway">Payments secured by Razorpay · UPI / Cards / Netbanking</p>
+            <p className="checkout__gateway">
+              UPI · Razorpay · UPI / Cards / Netbanking — secured checkout
+            </p>
           </form>
         </section>
 
@@ -216,9 +255,7 @@ export function CheckoutPage() {
             </div>
             <div className="bill__row">
               <span>Delivery fee {deliveryFee === 0 && '🎉'}</span>
-              <span>
-                {deliveryFee === 0 ? 'FREE' : <Price value={deliveryFee} />}
-              </span>
+              <span>{deliveryFee === 0 ? 'FREE' : <Price value={deliveryFee} />}</span>
             </div>
             <div className="bill__row">
               <span>GST (5%) + platform fee</span>
@@ -240,6 +277,56 @@ export function CheckoutPage() {
           </div>
         </aside>
       </div>
+
+      {upi && (
+        <div className="upi-overlay" role="dialog" aria-modal="true" aria-label="Complete UPI payment">
+          <div className="upi-panel">
+            <button
+              type="button"
+              className="upi-panel__close"
+              aria-label="Close"
+              onClick={() => {
+                setUpi(null)
+                setStage('form')
+                setError('Payment not completed yet — your order is saved, you can retry.')
+              }}
+            >
+              ×
+            </button>
+
+            <h2 className="upi-panel__title">Scan &amp; pay via UPI</h2>
+            <p className="upi-panel__amount">
+              <Price value={upi.amount} />
+            </p>
+
+            <img className="upi-panel__qr" src={upi.qrDataUrl} alt="UPI QR code" width={220} height={220} />
+
+            <p className="upi-panel__vpa">
+              Pay to <strong>{upi.payeeName}</strong>
+              <br />
+              <code>{upi.vpa}</code>
+            </p>
+
+            <a className="btn btn--primary btn--full" href={upi.intentUrl}>
+              Open UPI App 💸
+            </a>
+
+            <button
+              type="button"
+              className="btn btn--ghost btn--full"
+              disabled={busy}
+              onClick={() => void confirmUpiPayment()}
+            >
+              {busy ? 'Confirming…' : "I've paid — confirm order"}
+            </button>
+
+            <p className="upi-panel__note">
+              Scan the QR with any UPI app (GPay · PhonePe · Paytm), or tap the button above on
+              mobile. Payment goes directly to the merchant UPI ID.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

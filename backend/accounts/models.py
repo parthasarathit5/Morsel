@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 
-class FoodFlowUserManager(BaseUserManager):
+class FoodiebayUserManager(BaseUserManager):
     """Manager for email-based accounts (no username field)."""
 
     use_in_migrations = True
@@ -29,7 +29,7 @@ class FoodFlowUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """FoodFlow user — email based login (Swiggy style)."""
+    """Foodiebay user — email based login (Swiggy style)."""
 
     username = None
     email = models.EmailField('email address', unique=True)
@@ -38,7 +38,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    objects = FoodFlowUserManager()
+    objects = FoodiebayUserManager()
 
     def __str__(self) -> str:
         return self.email
