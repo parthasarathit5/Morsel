@@ -1,0 +1,39 @@
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+db.sqlite3
+staticfiles/
+.env
+.env.local
+.env.production
+*.log
+
+# --- Node / frontend ---
+node_modules/
+dist/
+*.tsbuildinfo
+.firebase/
+frontend/.env.local
+frontend/.env.production
+
+# --- Android / APK ---
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/local.properties
+frontend/android/.idea/
+*.keystore
+!debug.keystore
+*.apk
+*.aab
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

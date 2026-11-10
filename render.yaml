@@ -1,0 +1,45 @@
+# FoodFlow — Render deployment blueprint
+# Deploy: push to GitHub → Render dashboard → New > Blueprint → select this repo.
+#
+# Services created:
+#   1. foodflow-api  — Django backend (Web Service)
+#   2. foodflow-db    — PostgreSQL (free plan)
+#
+# The frontend deploys separately on Firebase Hosting (see frontend/README
+# section in the root README.md).
+
+databases:
+  - name: foodflow-db
+    databaseName: foodflow
+    user: foodflow
+    plan: free
+
+services:
+  - type: web
+    name: foodflow-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py seed_data
+    startCommand: gunicorn config.wsgi:application
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: '0'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: foodflow-db
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        # Set after you know your Firebase URL, e.g. https://foodflow.web.app
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
