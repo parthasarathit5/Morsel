@@ -1,11 +1,5 @@
-# FoodFlow web — Firebase Hosting config
-# 1. firebase login
-# 2. firebase use --add            (pick your project, alias: default)
-# 3. set VITE_API_BASE_URL in frontend/.env.production to your Render URL
-# 4. npm run build
-# 5. firebase deploy
 {
   "projects": {
-    "default": "YOUR_FIREBASE_PROJECT_ID"
+    "default": "foodiebay-app-2026"
   }
 }

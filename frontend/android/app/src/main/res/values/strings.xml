@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Foodiebay</string>
     <string name="title_activity_main">Foodiebay</string>
-    <string name="package_name">app.Foodiebay.mobile</string>
-    <string name="custom_url_scheme">app.Foodiebay.mobile</string>
+    <string name="package_name">app.foodiebay.mobile</string>
+    <string name="custom_url_scheme">app.foodiebay.mobile</string>
 </resources>

@@ -1,4 +1,4 @@
-package app.foodflow.mobile;
+package app.foodiebay.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

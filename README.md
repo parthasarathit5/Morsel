@@ -12,6 +12,26 @@ build a cart, pay via **UPI (direct to merchant) or Razorpay**, and track your o
 
 ---
 
+## 🌐 Live links
+
+| What | URL |
+|---|---|
+| **Web app (Firebase Hosting)** | https://foodiebay-app-2026.web.app |
+| Firebase console | https://console.firebase.google.com/project/foodiebay-app-2026/overview |
+| **API (temporary tunnel)** | https://haven-okay-specialties-wife.trycloudflare.com |
+| API health | https://haven-okay-specialties-wife.trycloudflare.com/api/v1/health/ |
+| **Android APK** | [`Foodiebay.apk`](./Foodiebay.apk) (4.2 MB) |
+| GitHub repo | https://github.com/parthasarathit5/Morsel |
+
+> ⚠️ **The API URL above is a Cloudflare quick tunnel to `localhost:8000`** — it only works
+> while this machine is running `scripts\share.ps1` and the URL changes on every restart.
+> The web app and the APK are baked with that URL, so after restarting run
+> `powershell -ExecutionPolicy Bypass -File scripts\share.ps1 -BuildApk` to re-point both.
+> For a permanent URL, deploy the backend to Render (see below) and set
+> `VITE_API_BASE_URL` to it in `frontend/.env.production`, then redeploy.
+
+---
+
 ## ✨ Features
 
 - 🏪 **Restaurant discovery** — search, Pure-Veg / Open-now filters, sort by rating or delivery time
@@ -89,53 +109,67 @@ Razorpay Checkout.
 
 ## 🔥 Deploy to Firebase Hosting (frontend web)
 
-1. `npm install -g firebase-tools && firebase login`
-2. `firebase use --add` inside `frontend/` → select your project, alias `default`
-3. Create `frontend/.env.production`:
-   ```
-   VITE_API_BASE_URL=https://foodiebay-api.onrender.com
-   ```
-4. Build + deploy:
-   ```bash
-   cd frontend
-   npm run build
-   firebase deploy
-   ```
-5. Add your Firebase URL to the backend's `CORS_ALLOWED_ORIGINS` on Render.
+Already deployed to project **`foodiebay-app-2026`** → https://foodiebay-app-2026.web.app
+
+To redeploy after code changes:
+
+```bash
+cd frontend
+npm run build
+firebase deploy --only hosting --project foodiebay-app-2026
+```
+
+`frontend/.env.production` holds `VITE_API_BASE_URL`, which is compiled into the bundle —
+so change it and rebuild whenever the API URL changes.
 
 ---
 
 ## 🤖 Build the Android APK
 
 The same React app is packaged natively with Capacitor (project in `frontend/android`).
+`appId` is `app.foodiebay.mobile`, so `MainActivity` lives in
+`frontend/android/app/src/main/java/app/foodiebay/mobile/`.
 
-1. Point the app at your live API — `frontend/.env.production`:
-   ```
-   VITE_API_BASE_URL=https://foodiebay-api.onrender.com
-   ```
+1. Point the app at your live API — `frontend/.env.production` (`VITE_API_BASE_URL=...`).
 2. Rebuild the web bundle and sync it into the Android project:
    ```bash
    cd frontend
-   npm run android:sync        # = npm run build && npx cap sync android
+   npx cap sync android
    ```
-3. Build the APK:
-   - **Android Studio:** `npm run android:open` → *Build → Build App Bundle(s)/APK(s) → Build APK(s)*
-   - **CLI** (JDK 17–21 + Android SDK 35+):
-     ```bash
-     cd android
-     gradlew assembleDebug                 # debug APK
-     gradlew assembleRelease               # needs signing config (see below)
-     ```
-   The debug APK lands in `android/app/build/outputs/apk/debug/app-debug.apk`.
+3. Build the APK (JDK 17–21 + Android SDK 35+; Android Studio's bundled JBR 21 works):
+   ```powershell
+   cd frontend\android
+   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+   .\gradlew.bat assembleDebug
+   ```
+   Output: `frontend/android/app/build/outputs/apk/debug/app-debug.apk`
+   (a copy is committed at the repo root as `Foodiebay.apk`).
 
-4. **Release signing** — create a keystore once and reference it in
-   `android/app/build.gradle` (`signingConfigs.release`):
-   ```
-   keytool -genkey -v -keystore foodiebay.keystore -alias foodiebay -keyalg RSA -keysize 2048 -validity 10000
-   ```
+### 📲 Install / run the APK
+
+**On a phone (easiest):** copy `Foodiebay.apk` to the device (USB, Google Drive,
+WhatsApp to yourself…), tap it, and allow *"Install unknown apps"* for the app you opened
+it from. Requires Android 7.0+ (minSdk 24).
+
+**Over USB with adb:**
+```bash
+adb devices                 # confirm the phone is listed
+adb install -r Foodiebay.apk
+```
+The app appears in the launcher as **Foodiebay**.
+
+**On an emulator:** Android Studio → Device Manager → start an emulator → drag the APK onto
+the emulator window, or `adb install -r Foodiebay.apk`.
+
+**Build a release APK** — create a keystore once and reference it in
+`android/app/build.gradle` (`signingConfigs.release`):
+```
+keytool -genkey -v -keystore foodiebay.keystore -alias foodiebay -keyalg RSA -keysize 2048 -validity 10000
+```
 
 > UPI intent links (`upi://pay?...`) open installed UPI apps directly from the APK —
-> the ideal payment UX on Android in India.
+> the ideal payment UX on Android in India. The release build needs no extra permission
+> for this.
 
 ---
 
@@ -143,6 +177,9 @@ The same React app is packaged natively with Capacitor (project in `frontend/and
 
 ```
 ├── render.yaml                  # Render blueprint (API service, uses Supabase DB)
+├── Foodiebay.apk                # built debug APK (Android 7+)
+├── scripts/
+│   └── share.ps1                # start tunnel + redeploy web (+ -BuildApk)
 ├── backend/
 │   ├── config/                  # Django settings/urls/wsgi (+ .env loader)
 │   ├── core/                    # health + API index

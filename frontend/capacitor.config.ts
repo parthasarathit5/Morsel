@@ -14,7 +14,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
  * instead of the dev proxy.
  */
 const config: CapacitorConfig = {
-  appId: 'app.Foodiebay.mobile',
+  appId: 'app.foodiebay.mobile',
   appName: 'Foodiebay',
   webDir: 'dist',
   server: {

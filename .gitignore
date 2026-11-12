@@ -9,7 +9,6 @@ db.sqlite3
 staticfiles/
 .env
 .env.local
-.env.production
 *.log
 
 # --- Node / frontend ---
@@ -18,7 +17,8 @@ dist/
 *.tsbuildinfo
 .firebase/
 frontend/.env.local
-frontend/.env.production
+# frontend/.env.production is tracked on purpose: it is public build config
+# (which API URL the deployed bundle talks to), not a secret.
 
 # --- Android / APK ---
 frontend/android/app/build/
@@ -30,6 +30,8 @@ frontend/android/.idea/
 !debug.keystore
 *.apk
 *.aab
+
+tools/
 
 # --- OS / editor ---
 .DS_Store
